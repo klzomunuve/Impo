@@ -1,6 +1,7 @@
+
+import express from "express";
 import cors from "cors";
 app.use(cors());
-import express from "express";
 import pkg from "pg";
 import dotenv from "dotenv";
 
