@@ -12,7 +12,7 @@ app.use(express.json());
 
 // ✅ Connect to Supabase PostgreSQL
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || "postgresql://postgres:malatani1234@db.rmdxhnhenedrwatqwbfj.supabase.co:5432/postgres",
+  connectionString: process.env.DATABASE_URL || "postgresql://postgres.rmdxhnhenedrwatqwbfj:[YOUR-PASSWORD]@aws-1-eu-central-2.pooler.supabase.com:6543/postgres",
   ssl: { rejectUnauthorized: false } // Required for Supabase SSL
 });
 
