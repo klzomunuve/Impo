@@ -1,122 +1,72 @@
-import express from 'express'
-import bodyParser from 'body-parser'
-import cors from 'cors'
-import { Pool } from 'pg'
-
-const app = express()
-
-// ✅ Middleware
-app.use(cors({
-  origin: '*', // Allow all origins (you can restrict later to your frontend domain)
-  methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type']
-}))
-app.use(bodyParser.json())
-
-// 🧠 Connect to Supabase PostgreSQL database
-const pool = new Pool({
-  connectionString: 'postgresql://postgres:malatani1234@db.rmdxhnhenedrwatqwbfj.supabase.co:5432/postgres',
-  ssl: { rejectUnauthorized: false }
-})
-
-// 🧩 Route: Register new user
-app.post('/register', async (req, res) => {
-  const { name, password, telephone } = req.body
-
-  try {
-    await pool.query(
-      'INSERT INTO "Academy\'s" (Name, Password, Telephone) VALUES ($1, $2, $3)',
-      [name, password, telephone]
-    )
-    res.json({ success: true, message: '✅ Registration successful!' })
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ success: false, message: '❌ ' + error.message })
-  }
-})
-
-// 🧩 Route: Login existing user
-app.post('/login', async (req, res) => {
-  const { name, password } = req.body
-
-  try {
-    const result = await pool.query(
-      'SELECT * FROM "Academy\'s" WHERE Name=$1 AND Password=$2',
-      [name, password]
-    )
-
-    if (result.rows.length > 0) {
-      res.json({ success: true, message: '✅ Login successful!' })
-    } else {
-      res.status(401).json({ success: false, message: '❌ Invalid credentials' })
-    }
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ success: false, message: '❌ ' + error.message })
-  }
-})
-
-// 🚀 Start the server
-const PORT = process.env.PORT || 3000
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`))
 import express from "express";
-import cors from "cors";
-import bodyParser from "body-parser";
 import pkg from "pg";
+import cors from "cors";
+import dotenv from "dotenv";
+
+dotenv.config();
 const { Pool } = pkg;
 
 const app = express();
+app.use(cors());
+app.use(express.json());
 
-app.use(bodyParser.json());
-
-// ✅ Allow CORS for your GitHub Pages domain
-app.use(
-  cors({
-    origin: ["https://klzomunuve.github.io"], // your frontend URL
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type"],
-  })
-);
-
-// ✅ Connect to Supabase
+// ✅ Connect to Supabase PostgreSQL
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+  connectionString: process.env.DATABASE_URL || "postgresql://postgres:malatani1234@db.rmdxhnhenedrwatqwbfj.supabase.co:5432/postgres",
+  ssl: { rejectUnauthorized: false } // Required for Supabase SSL
 });
 
-// ✅ Register route
+// ✅ Register new user
 app.post("/register", async (req, res) => {
-  const { name, password, telephone } = req.body;
   try {
+    const { name, password, telephone } = req.body;
+
+    if (!name || !password || !telephone) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const checkUser = await pool.query("SELECT * FROM public.\"Academy's\" WHERE telephone = $1", [telephone]);
+    if (checkUser.rows.length > 0) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
     await pool.query(
-      "INSERT INTO public.\"Academy's\" (Name, Password, Telephone) VALUES ($1, $2, $3)",
+      "INSERT INTO public.\"Academy's\" (name, password, telephone) VALUES ($1, $2, $3)",
       [name, password, telephone]
     );
-    res.json({ message: "Registration successful!" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Error registering user", error: err.message });
+
+    res.status(201).json({ message: "User registered successfully" });
+  } catch (error) {
+    console.error("❌ Registration error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
-// ✅ Login route
+// ✅ Login
 app.post("/login", async (req, res) => {
-  const { name, password } = req.body;
   try {
+    const { telephone, password } = req.body;
+
     const result = await pool.query(
-      "SELECT * FROM public.\"Academy's\" WHERE Name=$1 AND Password=$2",
-      [name, password]
+      "SELECT * FROM public.\"Academy's\" WHERE telephone = $1 AND password = $2",
+      [telephone, password]
     );
-    if (result.rows.length > 0) {
-      res.json({ message: "Login successful!" });
-    } else {
-      res.status(401).json({ message: "Invalid name or password" });
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ message: "Invalid credentials" });
     }
-  } catch (err) {
-    res.status(500).json({ message: "Error logging in", error: err.message });
+
+    res.json({ message: "Login successful", user: result.rows[0] });
+  } catch (error) {
+    console.error("❌ Login error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
-// ✅ Start server
+// ✅ Root route
+app.get("/", (req, res) => {
+  res.send("✅ Supabase Backend is running!");
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
