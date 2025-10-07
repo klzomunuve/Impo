@@ -1,21 +1,21 @@
-
 import express from "express";
 import cors from "cors";
-app.use(cors());
 import pkg from "pg";
 import dotenv from "dotenv";
 
 dotenv.config();
 const { Pool } = pkg;
 
-const app = express();
+const app = express(); // ✅ Define app first
 app.use(cors());
 app.use(express.json());
 
 // ✅ Connect to Supabase PostgreSQL
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || "postgresql://acad_db_user:uciynPbQSU2xxKTLmVDarPrXh9Gx80L5@dpg-d3iop8t6ubrc739es0ug-a.oregon-postgres.render.com/acad_db",
-  ssl: { rejectUnauthorized: false } // Required for Supabase SSL
+  connectionString:
+    process.env.DATABASE_URL ||
+    "postgresql://acad_db_user:uciynPbQSU2xxKTLmVDarPrXh9Gx80L5@dpg-d3iop8t6ubrc739es0ug-a.oregon-postgres.render.com/acad_db",
+  ssl: { rejectUnauthorized: false },
 });
 
 // ✅ Register new user
@@ -27,13 +27,17 @@ app.post("/register", async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    const checkUser = await pool.query("SELECT * FROM public.\"Academy's\" WHERE telephone = $1", [telephone]);
+    const checkUser = await pool.query(
+      'SELECT * FROM public."Academy\'s" WHERE telephone = $1',
+      [telephone]
+    );
+
     if (checkUser.rows.length > 0) {
       return res.status(400).json({ message: "User already exists" });
     }
 
     await pool.query(
-      "INSERT INTO public.\"Academy's\" (name, password, telephone) VALUES ($1, $2, $3)",
+      'INSERT INTO public."Academy\'s" (name, password, telephone) VALUES ($1, $2, $3)',
       [name, password, telephone]
     );
 
@@ -50,7 +54,7 @@ app.post("/login", async (req, res) => {
     const { telephone, password } = req.body;
 
     const result = await pool.query(
-      "SELECT * FROM public.\"Academy's\" WHERE telephone = $1 AND password = $2",
+      'SELECT * FROM public."Academy\'s" WHERE telephone = $1 AND password = $2',
       [telephone, password]
     );
 
