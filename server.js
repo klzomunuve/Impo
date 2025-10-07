@@ -59,3 +59,64 @@ app.post('/login', async (req, res) => {
 // 🚀 Start the server
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`))
+import express from "express";
+import cors from "cors";
+import bodyParser from "body-parser";
+import pkg from "pg";
+const { Pool } = pkg;
+
+const app = express();
+
+app.use(bodyParser.json());
+
+// ✅ Allow CORS for your GitHub Pages domain
+app.use(
+  cors({
+    origin: ["https://klzomunuve.github.io"], // your frontend URL
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
+  })
+);
+
+// ✅ Connect to Supabase
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+});
+
+// ✅ Register route
+app.post("/register", async (req, res) => {
+  const { name, password, telephone } = req.body;
+  try {
+    await pool.query(
+      "INSERT INTO public.\"Academy's\" (Name, Password, Telephone) VALUES ($1, $2, $3)",
+      [name, password, telephone]
+    );
+    res.json({ message: "Registration successful!" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error registering user", error: err.message });
+  }
+});
+
+// ✅ Login route
+app.post("/login", async (req, res) => {
+  const { name, password } = req.body;
+  try {
+    const result = await pool.query(
+      "SELECT * FROM public.\"Academy's\" WHERE Name=$1 AND Password=$2",
+      [name, password]
+    );
+    if (result.rows.length > 0) {
+      res.json({ message: "Login successful!" });
+    } else {
+      res.status(401).json({ message: "Invalid name or password" });
+    }
+  } catch (err) {
+    res.status(500).json({ message: "Error logging in", error: err.message });
+  }
+});
+
+// ✅ Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
