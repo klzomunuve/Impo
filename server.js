@@ -2,7 +2,6 @@ import cors from "cors";
 app.use(cors());
 import express from "express";
 import pkg from "pg";
-import cors from "cors";
 import dotenv from "dotenv";
 
 dotenv.config();
