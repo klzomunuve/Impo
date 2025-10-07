@@ -12,7 +12,7 @@ app.use(express.json());
 
 // ✅ Connect to Supabase PostgreSQL
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || "postgresql://postgres.rmdxhnhenedrwatqwbfj:[YOUR-PASSWORD]@aws-1-eu-central-2.pooler.supabase.com:6543/postgres",
+  connectionString: process.env.DATABASE_URL || "postgresql://acad_db_user:uciynPbQSU2xxKTLmVDarPrXh9Gx80L5@dpg-d3iop8t6ubrc739es0ug-a.oregon-postgres.render.com/acad_db",
   ssl: { rejectUnauthorized: false } // Required for Supabase SSL
 });
 
